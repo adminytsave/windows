@@ -3,6 +3,7 @@
 ARG VERSION_ARG="latest"
 FROM scratch AS build-amd64
 
+# Copy QEMU binaries from the qemu image
 COPY --from=qemux/qemu:7.29 / /
 
 ARG TARGETARCH
@@ -10,6 +11,7 @@ ARG DEBCONF_NOWARNINGS="yes"
 ARG DEBIAN_FRONTEND="noninteractive"
 ARG DEBCONF_NONINTERACTIVE_SEEN="true"
 
+# Install required dependencies and tools
 RUN set -eu && \
     apt-get update && \
     apt-get --no-install-recommends -y install \
@@ -24,23 +26,30 @@ RUN set -eu && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+# Copy your source and assets
 COPY --chmod=755 ./src /run/
 COPY --chmod=755 ./assets /run/assets
 
+# Download and add additional resources
 ADD --chmod=664 https://github.com/qemus/virtiso-whql/releases/download/v1.9.49-0/virtio-win-1.9.49.tar.xz /var/drivers.txz
 
+# Use the arm64 architecture build stage
 FROM dockurr/windows-arm:${VERSION_ARG} AS build-arm64
 FROM build-${TARGETARCH}
 
 ARG VERSION_ARG="0.00"
 RUN echo "$VERSION_ARG" > /run/version
 
-VOLUME /storage
+# Removed VOLUME command since Railway doesn't support it
+# Make sure your Kubernetes configuration handles the /storage directory
+
 EXPOSE 3389 8006
 
+# Set environment variables
 ENV VERSION="11"
 ENV RAM_SIZE="4G"
 ENV CPU_CORES="2"
 ENV DISK_SIZE="64G"
 
+# Entrypoint for the container
 ENTRYPOINT ["/usr/bin/tini", "-s", "/run/entry.sh"]
