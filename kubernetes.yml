@@ -9,7 +9,8 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: /mnt/data/windows-storage  # Adjust this path as needed based on your environment
+    path: /mnt/data/windows-storage  # You can change this to a location based on your environment
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -22,7 +23,8 @@ spec:
     requests:
       storage: 64Gi
   volumeMode: Filesystem
-  storageClassName: manual  # Use the appropriate StorageClass if you have one configured
+  storageClassName: manual  # Ensure to change this if you have a different StorageClass set in your Railway/Kubernetes setup
+
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -45,9 +47,9 @@ spec:
           image: dockurr/windows
           env:
             - name: VER
-              value: "5.14"  # Set the version environment variable or remove if not required
+              value: "5.14"  # Version of your app (adjust as needed)
           volumeMounts:
-            - mountPath: /storage  # This is where the container will access the storage
+            - mountPath: /storage  # Mount /storage to the Persistent Volume
               name: windows-storage
               readOnly: false
       volumes:
